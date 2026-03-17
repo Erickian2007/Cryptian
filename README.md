@@ -1,6 +1,6 @@
 # 🔐 IAN-SEC
 
-> Cofre de senhas pessoal — offline, terminal, sem servidor, sem nuvem.
+> Personal password vault — offline, terminal, no server, no cloud.
 
 ```
     ██╗ █████╗ ███╗  ██╗       ███████╗███████╗ ██████╗
@@ -13,66 +13,66 @@
 
 ---
 
-## Por que offline?
+## Why offline?
 
-Gerenciadores online como LastPass ou Bitwarden são convenientes, mas carregam riscos estruturais:
+Online managers like LastPass or Bitwarden are convenient, but they carry structural risks:
 
-- Em 2022, o LastPass foi hackeado — dados de milhões de usuários vazaram
-- Você depende da empresa continuar existindo
-- Você depende da internet para acessar suas próprias senhas
-- Você confia cegamente na implementação criptográfica deles
+- In 2022, LastPass was hacked — data from millions of users was leaked
+- You depend on the company continuing to exist
+- You depend on the internet to access your own passwords
+- You blindly trust their cryptographic implementation
 
-O IAN-SEC resolve isso de forma diferente: **o cofre vive na sua máquina**. Nenhum servidor. Nenhuma conta. Nenhuma dependência externa. Se alguém roubar o arquivo `.json`, não consegue nada sem a sua senha mestra — matematicamente.
+IAN-SEC solves this differently: **the vault lives on your machine**. No server. No account. No external dependencies. If someone steals the `.json` file, they get nothing without your master password — mathematically.
 
 ---
 
-## Como funciona
+## How it works
 
-O IAN-SEC usa uma cadeia de três camadas de segurança:
+IAN-SEC uses a three-layer security chain:
 
 ```
-sua senha mestra (humana, memorável)
+your master password (human, memorable)
         │
         ▼
   PBKDF2-HMAC-SHA256
-  600.000 iterações + salt aleatório
+  600,000 iterations + random salt
         │
         ▼
-  chave de 256 bits (inquebrável na força bruta)
+  256-bit key (brute-force proof)
         │
         ▼
-  AES-256-GCM + nonce aleatório
+  AES-256-GCM + random nonce
         │
         ▼
-  dado cifrado (ilegível sem a chave)
+  ciphertext (unreadable without the key)
         │
         ▼
-  salvo em ~/.iansec.json
+  saved to ~/.iansec.json
 ```
 
 ### PBKDF2 + Salt
 
-Sua senha humana é fraca por natureza. O PBKDF2 aplica o SHA-256 **600.000 vezes em loop**, tornando cada tentativa de força bruta cara computacionalmente — o que leva milissegundos para você leva anos para um atacante testando bilhões de combinações.
+Your human password is inherently weak. PBKDF2 applies SHA-256 **600,000 times in a loop**, making each brute-force attempt computationally expensive — what takes you milliseconds would take an attacker years to test billions of combinations.
 
-O salt é um número aleatório de 16 bytes gerado na hora, único para cada entrada. Isso garante que duas senhas idênticas produzam resultados completamente diferentes — eliminando ataques por rainbow table.
+The salt is a randomly generated 16-byte number, unique to each entry. This ensures that two identical passwords produce completely different results — eliminating rainbow table attacks.
 
 ### AES-256-GCM
 
-O AES-256 é o padrão adotado pelo governo americano para dados classificados. Com 256 bits de chave, existem mais combinações possíveis do que átomos no universo observável. O modo GCM adiciona autenticação — se alguém alterar um único bit do arquivo cifrado, a descriptografia falha imediatamente.
+AES-256 is the standard adopted by the US government for classified data. With a 256-bit key, there are more possible combinations than atoms in the observable universe. GCM mode adds authentication — if someone alters even a single bit of the encrypted file, decryption fails immediately.
 
-O nonce (number used once) é outro número aleatório de 12 bytes gerado por operação, garantindo que criptografar o mesmo dado duas vezes produza resultados completamente diferentes.
+The nonce (number used once) is another randomly generated 12-byte number per operation, ensuring that encrypting the same data twice produces completely different results.
 
-### Princípio de Kerckhoffs
+### Kerckhoffs' Principle
 
-> *"Um sistema criptográfico deve ser seguro mesmo que tudo sobre ele, exceto a chave, seja de conhecimento público."*
+> *"A cryptographic system should be secure even if everything about it, except the key, is public knowledge."*
 
-O código do IAN-SEC é aberto. Os algoritmos são públicos. A segurança está **inteiramente na sua senha mestra** — não no sigilo do sistema.
+IAN-SEC's code is open. The algorithms are public. Security rests **entirely on your master password** — not on the secrecy of the system.
 
 ---
 
-## Instalação
+## Installation
 
-**Dependência:**
+**Dependency:**
 ```bash
 pip install cryptography
 ```
@@ -82,7 +82,7 @@ pip install cryptography
 pip install cryptography --break-system-packages
 ```
 
-**Clipboard automático (opcional):**
+**Automatic clipboard (optional):**
 ```bash
 # Arch / Manjaro
 sudo pacman -S xclip
@@ -91,98 +91,98 @@ sudo pacman -S xclip
 sudo apt install xclip
 ```
 
-**Rodar:**
+**Run:**
 ```bash
 python iansec.py
 ```
 
 ---
 
-## Funcionalidades
+## Features
 
-| # | Função | Descrição |
-|---|--------|-----------|
-| 1 | **Adicionar senha** | Criptografa e salva uma senha com nome de serviço |
-| 2 | **Obter senha** | Descriptografa e copia para o clipboard automaticamente |
-| 3 | **Listar entradas** | Mostra os nomes salvos (nunca as senhas) |
-| 4 | **Deletar entrada** | Remove uma entrada (exige senha mestra) |
-| 5 | **Gerar senha para site** | Cria senha forte e determinística a partir da sua senha humana |
-| 6 | **Fazer backup** | Copia o cofre para destinos configurados |
-| 7 | **Destinos de backup** | Gerencia caminhos de backup (pen drive, HD externo, nuvem) |
+| # | Feature | Description |
+|---|---------|-------------|
+| 1 | **Add password** | Encrypts and saves a password with a service name |
+| 2 | **Get password** | Decrypts and copies to clipboard automatically |
+| 3 | **List entries** | Shows saved names (never the passwords) |
+| 4 | **Delete entry** | Removes an entry (requires master password) |
+| 5 | **Generate site password** | Creates a strong, deterministic password from your human password |
+| 6 | **Backup** | Copies the vault to configured destinations |
+| 7 | **Backup destinations** | Manages backup paths (USB drive, external HDD, cloud) |
 
-### Gerador de senha determinístico
+### Deterministic password generator
 
-A opção 5 é única: ela **não salva nada**. Usa sua senha humana + nome do serviço como entrada do PBKDF2 e gera sempre a mesma senha forte de saída.
+Option 5 is unique: it **saves nothing**. It uses your human password + service name as PBKDF2 input and always produces the same strong password as output.
 
 ```
-senha humana + "google"  →  Xk#9mP2qL$nR7vBw4jQs
-senha humana + "github"  →  3Yw@8tFnZe5hCmK1sDxA
+master password + "google"  →  Xk#9mP2qL$nR7vBw4jQs
+master password + "github"  →  3Yw@8tFnZe5hCmK1sDxA
 ```
 
-Mesma senha mestra, resultados completamente diferentes por serviço. Se um site vazar, os outros continuam seguros. E você nunca precisa guardar essas senhas — pode recriar qualquer uma na hora.
+Same master password, completely different results per service. If one site leaks, the others remain safe. And you never need to store those passwords — you can recreate any of them on the spot.
 
 ---
 
 ## Backup
 
-O arquivo `~/.iansec.json` **pode ser copiado para qualquer lugar sem risco**. Sem a senha mestra, é lixo criptografado. Você pode jogá-lo no Google Drive, Dropbox, pen drive, e-mail — não importa.
+The `~/.iansec.json` file **can be copied anywhere without risk**. Without the master password, it's just encrypted garbage. You can throw it on Google Drive, Dropbox, a USB drive, email — it doesn't matter.
 
 ```bash
-# backup manual
-cp ~/.iansec.json /media/seu-pendrive/
+# manual backup
+cp ~/.iansec.json /media/your-usb-drive/
 
-# ou use a opção 6 do menu para automatizar
+# or use menu option 6 to automate it
 ```
 
-O backup automático salva com timestamp:
+Automatic backup saves with a timestamp:
 ```
 IAN-SEC_backup_20260317_143022.json
 ```
 
 ---
 
-## Segurança
+## Security
 
-**O que está protegido:**
-- Cada entrada usa salt e nonce únicos — padrões são impossíveis
-- A comparação de chaves usa tempo constante (`hmac.compare_digest`) — sem timing attacks
-- O arquivo tem permissão `600` — só você lê e escreve
-- A senha mestra nunca é salva em lugar nenhum
+**What is protected:**
+- Each entry uses unique salt and nonce — patterns are impossible
+- Key comparison uses constant time (`hmac.compare_digest`) — no timing attacks
+- The file has `600` permissions — only you can read and write
+- The master password is never saved anywhere
 
-**O que você precisa proteger:**
-- Sua senha mestra — sem ela não há recuperação
-- O arquivo `~/.iansec.json` — é seu cofre
+**What you need to protect:**
+- Your master password — without it there is no recovery
+- The `~/.iansec.json` file — it is your vault
 
-**O que não importa se vazar:**
-- O código fonte (está aqui, é público — princípio de Kerckhoffs)
-- O arquivo `.json` isolado (inútil sem a senha mestra)
+**What doesn't matter if leaked:**
+- The source code (it's right here, it's public — Kerckhoffs' principle)
+- The `.json` file in isolation (useless without the master password)
 
 ---
 
-## Estrutura
+## Structure
 
 ```
-iansec.py          ← tudo em um arquivo, sem dependências extras além do cryptography
-~/.iansec.json     ← seu cofre (nunca vai para o repositório)
-~/.iansec_config.json  ← destinos de backup (nunca vai para o repositório)
+iansec.py              ← everything in one file, no extra dependencies beyond cryptography
+~/.iansec.json         ← your vault (never goes to the repository)
+~/.iansec_config.json  ← backup destinations (never goes to the repository)
 ```
 
 ---
 
-## Filosofia
+## Philosophy
 
-O IAN-SEC nasceu como um exercício de aprender criptografia do zero — entender cada peça antes de usar. Não é só uma ferramenta, é a materialização de conceitos:
+IAN-SEC was born as an exercise in learning cryptography from scratch — understanding each piece before using it. It's not just a tool, it's the materialization of concepts:
 
-- **XOR** como base de toda criptografia simétrica
-- **Funções de mão única** que não têm retorno
-- **Salt** contra rainbow tables
-- **Iterações custosas** contra força bruta
-- **Autenticação** além de confidencialidade
+- **XOR** as the foundation of all symmetric cryptography
+- **One-way functions** with no way back
+- **Salt** against rainbow tables
+- **Costly iterations** against brute force
+- **Authentication** beyond confidentiality
 
-Se você quer entender como o IAN-SEC funciona por dentro, o código é intencionalmente legível e comentado.
+If you want to understand how IAN-SEC works under the hood, the code is intentionally readable and commented.
 
 ---
 
-## Licença
+## License
 
-MIT — use, modifique, distribua à vontade.
+MIT — use, modify, distribute freely.
