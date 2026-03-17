@@ -60,7 +60,7 @@ _MENU_ITEMS = [
     ("2", "Get password"),
     ("3", "List entries"),
     ("4", "Delete entry"),
-    ("5", "Generate password for site"),
+    ("5", "Generate password"),
     ("6", "Backup vault"),
     ("7", "Manage backup destinations"),
     ("8", "Quit"),
